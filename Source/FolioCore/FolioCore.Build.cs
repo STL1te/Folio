@@ -55,7 +55,8 @@ public class FolioCore : ModuleRules
 		// ICU comes with it: HarfBuzz gets its Unicode character properties from ICU, so the
 		// library does not link without it.
 		bool bHarfBuzz = bFreeType && Target.bCompileICU
-			&& (Target.Platform == UnrealTargetPlatform.IOS
+			&& (Target.Platform.ToString() == "PS5"
+				|| Target.Platform == UnrealTargetPlatform.IOS
 				|| Target.Platform == UnrealTargetPlatform.Mac
 				|| Target.IsInPlatformGroup(UnrealPlatformGroup.Windows)
 				|| Target.IsInPlatformGroup(UnrealPlatformGroup.Android)

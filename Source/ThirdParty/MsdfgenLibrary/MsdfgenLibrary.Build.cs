@@ -10,7 +10,8 @@ public class MsdfgenLibrary : ModuleRules
 {
 	/// <summary>Subdirectory of lib/ holding the build for the target platform.</summary>
 	protected virtual string LibraryPlatform =>
-		Target.Platform == UnrealTargetPlatform.Mac ? "Mac"
+		Target.Platform.ToString() == "PS5" ? "PS5"
+		: Target.Platform == UnrealTargetPlatform.Mac ? "Mac"
 		: Target.IsInPlatformGroup(UnrealPlatformGroup.Unix) ? "Linux"
 		: "Win64";
 

@@ -41,7 +41,9 @@
 #include <malloc/malloc.h>
 #include <dispatch/dispatch.h>
 #else
+#if !defined(__PROSPERO__)
 #include <malloc.h>
+#endif
 #include <semaphore.h>
 #endif
 #endif
@@ -21903,7 +21905,7 @@ SkSpan<std::byte> complete_size(void* ptr, size_t size) {
     #elif defined(SK_BUILD_FOR_ANDROID) && __ANDROID_API__ >= 17
         completeSize = malloc_usable_size(ptr);
         SkASSERT(completeSize >= size);
-    #elif defined(SK_BUILD_FOR_UNIX)
+    #elif defined(SK_BUILD_FOR_UNIX) && !defined(__PROSPERO__)
         completeSize = malloc_usable_size(ptr);
         SkASSERT(completeSize >= size);
     #elif defined(SK_BUILD_FOR_WIN)

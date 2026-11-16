@@ -48,6 +48,12 @@ set(FOLIO_UE_PLATFORM "Win64" CACHE STRING "Staging subdirectory under Source/Th
 # plugin points this outside it.
 set(FOLIO_STAGE_ROOT "${FOLIO_ROOT}/Source/ThirdParty" CACHE PATH "Root the libraries stage into")
 
+if(FOLIO_UE_PLATFORM STREQUAL "PS5")
+	# Match Unreal's SonyToolChain: global operator new guarantees 16-byte alignment.
+	# The compiler's platform default can otherwise emit 32-byte aligned AVX stores.
+	add_compile_options(-fnew-alignment=16)
+endif()
+
 if(MSVC)
 	add_compile_options(/GR- /EHsc)
 else()
@@ -87,6 +93,8 @@ set(FOLIO_FREETYPE_INCLUDE "${FOLIO_FREETYPE_ROOT}/include")
 # build of the engine put it, so a cross build overrides only this.
 if(FOLIO_UE_PLATFORM STREQUAL "Mac")
 	set(FOLIO_FREETYPE_DEFAULT "${FOLIO_FREETYPE_ROOT}/lib/Mac/Release/libfreetype.a")
+elseif(FOLIO_UE_PLATFORM STREQUAL "PS5")
+	set(FOLIO_FREETYPE_DEFAULT "${FOLIO_ENGINE_DIR}/Platforms/PS5/Source/ThirdParty/FreeType2/${FOLIO_FREETYPE_VERSION}/Lib/Release/libfreetype.a")
 elseif(FOLIO_UE_PLATFORM STREQUAL "Linux")
 	if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64")
 		set(FOLIO_FREETYPE_DEFAULT "${FOLIO_FREETYPE_ROOT}/lib/Unix/aarch64-unknown-linux-gnueabi/Release/libfreetype.a")
