@@ -424,6 +424,11 @@ bool UFolioWidget::ScrollElementIntoView(const FString& ElementId)
 	return true;
 }
 
+bool UFolioWidget::Navigate(const EFolioNavAction Action)
+{
+	return Canvas.IsValid() && Canvas->Navigate(Action);
+}
+
 bool UFolioWidget::ScrollElementByItem(const FString& ScrollElementId, const FString& FirstItemId,
 	const FString& NextItemId, float Steps, float& Offset, float& Range)
 {

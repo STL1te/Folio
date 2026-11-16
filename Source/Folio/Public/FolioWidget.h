@@ -6,6 +6,7 @@
 #include "CoreMinimal.h"
 
 #include "FolioScale.h"
+#include "FolioNavBindings.h"
 
 #include "FolioWidget.generated.h"
 
@@ -299,6 +300,10 @@ public:
 
 	/** Keeps RmlUi mutations in Folio's module, including its event specification in editor builds. */
 	FOLIO_API bool ScrollElementIntoView(const FString& ElementId);
+
+	/** Send a semantic navigation press through the same path as keyboard/gamepad input. */
+	UFUNCTION(BlueprintCallable, Category = "Folio|Navigation")
+	FOLIO_API bool Navigate(EFolioNavAction Action);
 
 	/** Scrolls a horizontal viewport by measured item pitches, without focusing or selecting an item.
 	 * A zero step only reads its offset/range. The next item includes the layout gap in the pitch. */

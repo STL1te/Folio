@@ -321,6 +321,9 @@ public:
 	/** Whether the canvas takes input right now, after the document, the CVar and the debugger. */
 	bool IsInteractive() const { return bInteractive; }
 
+	/** Forward a prompt click into native document navigation, including wrapping. */
+	bool Navigate(EFolioNavAction Action);
+
 	/** Whether the loaded document left input on. True with no document or no declaration. */
 	bool IsDocumentInteractive() const { return bDocumentInteractive; }
 

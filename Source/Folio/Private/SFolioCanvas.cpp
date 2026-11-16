@@ -1355,6 +1355,28 @@ void SFolioCanvas::OnFocusLost(const FFocusEvent& FocusEvent)
 	SPanel::OnFocusLost(FocusEvent);
 }
 
+bool SFolioCanvas::Navigate(const EFolioNavAction Action)
+{
+	if (!IsInteractive())
+		return false;
+	using namespace Rml::Input;
+	KeyIdentifier Key = KI_UNKNOWN;
+	int32 Modifiers = 0;
+	switch (Action)
+	{
+	case EFolioNavAction::Up: Key = KI_UP; break;
+	case EFolioNavAction::Down: Key = KI_DOWN; break;
+	case EFolioNavAction::Left: Key = KI_LEFT; break;
+	case EFolioNavAction::Right: Key = KI_RIGHT; break;
+	case EFolioNavAction::Confirm: Key = KI_RETURN; break;
+	case EFolioNavAction::Back: Key = KI_ESCAPE; break;
+	case EFolioNavAction::NextTab: Key = KI_TAB; break;
+	case EFolioNavAction::PreviousTab: Key = KI_TAB; Modifiers = KM_SHIFT; break;
+	default: return false;
+	}
+	return SendNavigation(Key, Modifiers);
+}
+
 bool SFolioCanvas::SendNavigation(const Rml::Input::KeyIdentifier Key, const int32 Modifiers)
 {
 	Rml::Context* Context = Host.GetContext();
