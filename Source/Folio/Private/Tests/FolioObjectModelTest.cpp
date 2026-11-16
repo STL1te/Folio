@@ -230,6 +230,47 @@ bool FFolioArrayModelTest::RunTest(const FString&)
 	return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFolioStructPropertyTest, "Folio.ViewModel.StructProperties",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FFolioStructPropertyTest::RunTest(const FString&)
+{
+	FScopedContext Scope("FolioTest.StructProperties");
+	if (!TestNotNull(TEXT("context"), Scope.Context))
+		return false;
+
+	TStrongObjectPtr<UFolioTestPlainModel> Plain(NewObject<UFolioTestPlainModel>());
+	Plain->Selected = { TEXT("Confirm"), 1.0f, { TEXT("Cross") } };
+	FFolioObjectModel Bridge;
+	if (!TestTrue(TEXT("mount"), Bridge.Mount(Scope.Context, TEXT("input"), Plain.Get(), true)))
+		return false;
+
+	Rml::ElementDocument* Document = Scope.Context->LoadDocumentFromMemory(
+		"<rml><body data-model=\"input\"><span id=\"name\">{{ Selected.Name }}</span>"
+		"<span id=\"cap\">{{ Selected.Glyph.Cap }}</span><span id=\"whole\">{{ Selected }}</span></body></rml>");
+	if (!TestNotNull(TEXT("document"), Document))
+		return false;
+
+	const auto Text = [Document](const Rml::String& Id)
+	{
+		const Rml::Element* Element = Document->GetElementById(Id);
+		return Element ? FString(Element->GetInnerRML().c_str()) : FString();
+	};
+	Scope.Context->Update();
+	TestEqual(TEXT("standalone struct exposes its members"), Text("name"), TEXT("Confirm"));
+	TestEqual(TEXT("nested members are reachable outside arrays"), Text("cap"), TEXT("Cross"));
+	TestTrue(TEXT("whole struct retains its exported text"), Text("whole").Contains(TEXT("Cross")));
+	TestFalse(TEXT("settled struct does not dirty the document"), Bridge.Tick());
+
+	Plain->Selected.Glyph.Cap = TEXT("Circle");
+	TestTrue(TEXT("polling sees a nested member change"), Bridge.Tick());
+	Scope.Context->Update();
+	TestEqual(TEXT("nested change reaches the document"), Text("cap"), TEXT("Circle"));
+	TestFalse(TEXT("changed struct settles again"), Bridge.Tick());
+	Document->Close();
+	return !HasAnyErrors();
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFolioNestedRowTest, "Folio.ViewModel.NestedRows",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 

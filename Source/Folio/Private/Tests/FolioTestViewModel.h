@@ -107,6 +107,10 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category = "Folio")
 	TArray<FFolioTestRow> Party;
 
+	/** A standalone struct, including a nested glyph, outside an array. */
+	UPROPERTY(BlueprintReadOnly, Category = "Folio")
+	FFolioTestRow Selected;
+
 	UPROPERTY(BlueprintReadWrite, Category = "Folio")
 	TArray<FString> Tags;
 

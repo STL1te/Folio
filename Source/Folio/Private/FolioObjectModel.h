@@ -69,12 +69,16 @@ public:
 		Rml::String StringValue;
 	};
 
+	struct FLeaf;
+
 	/** One bound property, and the copy of it RmlUi holds the address of. */
 	struct FField
 	{
 		FProperty* Property = nullptr;
 		Rml::String Name;
 		FValue Value;
+		/** Struct members use the same read-only mirrors as a struct inside an array row. */
+		TArray<TUniquePtr<FLeaf>> Members;
 
 		FDelegateHandle Notification;
 		/** Kept so a write can announce itself, not only so the subscription can be removed. */

@@ -387,6 +387,33 @@ struct FFolioObjectModel::FDefinitions
 		return Rml::DataVariable();
 	}
 
+	/** A top-level struct property keeps its whole-value binding and exposes its mirrored members. */
+	class FStructFieldDefinition final : public Rml::VariableDefinition
+	{
+	public:
+		explicit FStructFieldDefinition(FDefinitions& InOwner)
+			: VariableDefinition(Rml::DataVariableType::Struct), Owner(InOwner) {}
+
+		bool Get(void* Ptr, Rml::Variant& Variant) override
+		{
+			return FFieldDefinition::Read(static_cast<FField*>(Ptr)->Value, Variant);
+		}
+
+		bool Set(void* Ptr, const Rml::Variant& Variant) override
+		{
+			FField& Field = *static_cast<FField*>(Ptr);
+			return Field.Owner != nullptr && Field.Owner->Write(Field, Variant);
+		}
+
+		Rml::DataVariable Child(void* Ptr, const Rml::DataAddressEntry& Address) override
+		{
+			return Owner.FindMember(static_cast<FField*>(Ptr)->Members, Address);
+		}
+
+	private:
+		FDefinitions& Owner;
+	};
+
 	/**
 	 * How many elements an array has, as a scalar.
 	 *
@@ -443,6 +470,7 @@ struct FFolioObjectModel::FDefinitions
 	};
 
 	FFieldDefinition Bound;
+	FStructFieldDefinition StructBound{ *this };
 	FValueDefinition Mirror;
 	FCountDefinition Count;
 	FRowDefinition Element{ *this };
@@ -516,6 +544,15 @@ bool FFolioObjectModel::Mount(Rml::Context* Context, const FString& InModelName,
 		Field->Name = Folio::ToRmlString(Property->GetName());
 		Field->Value.Kind = KindFor(*Property);
 		Field->Owner = this;
+		if (const FStructProperty* Struct = CastField<FStructProperty>(Property))
+		{
+			TArray<FProperty*> Members;
+			CollectMembers(*Struct->Struct, Members);
+			for (FProperty* Member : Members)
+			{
+				Field->Members.Add(MakeLeaf(Member, 1));
+			}
+		}
 
 		// BlueprintReadOnly and EditConst are the author saying this is published for display. A
 		// markup write to one is refused rather than half-applied.
@@ -525,8 +562,10 @@ bool FFolioObjectModel::Mount(Rml::Context* Context, const FString& InModelName,
 
 		// Through the field rather than the mirrored value, so a write can reach the property. See
 		// FFieldDefinition.
-		Constructor.BindCustomDataVariable(Field->Name,
-			Rml::DataVariable(&Definitions->Bound, Field.Get()));
+		Rml::VariableDefinition* Definition = Field->Members.IsEmpty()
+			? static_cast<Rml::VariableDefinition*>(&Definitions->Bound)
+			: static_cast<Rml::VariableDefinition*>(&Definitions->StructBound);
+		Constructor.BindCustomDataVariable(Field->Name, Rml::DataVariable(Definition, Field.Get()));
 
 		Fields.Add(MoveTemp(Field));
 	}
@@ -836,8 +875,14 @@ bool FFolioObjectModel::Refresh(FField& Field)
 		return false;
 	}
 
-	return ReadInto(Field.Value, *Field.Property,
+	bool bMoved = ReadInto(Field.Value, *Field.Property,
 		Field.Property->ContainerPtrToValuePtr<void>(Object), Object);
+	const void* ValuePtr = Field.Property->ContainerPtrToValuePtr<void>(Object);
+	for (TUniquePtr<FLeaf>& Member : Field.Members)
+	{
+		bMoved |= ReadLeaf(*Member, ValuePtr, Object);
+	}
+	return bMoved;
 }
 
 bool FFolioObjectModel::Refresh(FArrayField& Field)
