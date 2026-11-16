@@ -415,6 +415,40 @@ bool UFolioWidget::FocusElement(const FString& ElementId, const bool bVisible)
 	return Element && Element->Focus(bVisible);
 }
 
+bool UFolioWidget::ScrollElementIntoView(const FString& ElementId)
+{
+	Rml::Element* Element = ResolveElement(ElementId);
+	if (!Element)
+		return false;
+	Element->ScrollIntoView(Rml::ScrollAlignment::Nearest);
+	return true;
+}
+
+bool UFolioWidget::ScrollElementByItem(const FString& ScrollElementId, const FString& FirstItemId,
+	const FString& NextItemId, float Steps, float& Offset, float& Range)
+{
+	Offset = Range = 0.f;
+	Rml::Element* Scroll = ResolveElement(ScrollElementId);
+	if (!Scroll || Scroll->GetClientWidth() <= 0)
+		return false;
+	Range = FMath::Max(0.f, Scroll->GetScrollWidth() - Scroll->GetClientWidth());
+	Offset = Scroll->GetScrollLeft();
+	if (Steps != 0.f)
+	{
+		Rml::Element* First = ResolveElement(FirstItemId);
+		Rml::Element* Next = ResolveElement(NextItemId);
+		if (!First)
+			return false;
+		const float Pitch = Next ? FMath::Abs(Next->GetAbsoluteOffset().x - First->GetAbsoluteOffset().x)
+			: First->GetBox().GetSize(Rml::BoxArea::Border).x;
+		if (Pitch <= 0.f)
+			return false;
+		Scroll->SetScrollLeft(FMath::Clamp(Offset + Pitch * Steps, 0.f, Range));
+		Offset = Scroll->GetScrollLeft();
+	}
+	return true;
+}
+
 void UFolioWidget::TakeFocus()
 {
 	if (Canvas.IsValid() && FSlateApplication::IsInitialized())

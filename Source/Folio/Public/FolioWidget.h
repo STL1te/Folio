@@ -297,6 +297,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Folio")
 	FOLIO_API bool FocusElement(const FString& ElementId, bool bVisible = true);
 
+	/** Keeps RmlUi mutations in Folio's module, including its event specification in editor builds. */
+	FOLIO_API bool ScrollElementIntoView(const FString& ElementId);
+
+	/** Scrolls a horizontal viewport by measured item pitches, without focusing or selecting an item.
+	 * A zero step only reads its offset/range. The next item includes the layout gap in the pitch. */
+	UFUNCTION(BlueprintCallable, Category = "Folio")
+	FOLIO_API bool ScrollElementByItem(const FString& ScrollElementId, const FString& FirstItemId,
+		const FString& NextItemId, float Steps, float& Offset, float& Range);
+
 	/**
 	 * Scrolls one element to a fraction of its own range. Zero is the top, one is the bottom.
 	 *
